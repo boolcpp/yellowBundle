@@ -13,40 +13,40 @@ enum class TaskStatus
   DONE
 };
 
-struct taskCounter{
-  int n;
-  int inP;
-  int t;
-  int d;
-};
-
-using TaskInfo = map<TaskStatus, int>;
+using TaskInfo     = map<TaskStatus, int>;
+using personObject = map<string, TaskInfo>;
 
 class TeamTasks {
 public:
   const TaskInfo& GetPersonTasksInfo(const string& person) const{
-    map<string, taskCounter>::iterator it;
-    it = personVocabulary.find(person);
-    return ;
+    auto search = personVocabulary.find(person);
+    if(search != personVocabulary.end()){
+        return search->second;
+      }
+    else { //may i do this?
+        TaskInfo *t = NULL;
+        return *t;
+      }
   }
 
   void AddNewTask(const string& person){
-    taskCounter newTC{0, 0, 0, 0};
-    personVocabulary.insert(pair<const string&, taskCounter&>(person, newTC)); //newTC copy or no?
+    TaskInfo cleanTask;
+    cleanTask.insert(pair<TaskStatus, int>(TaskStatus::NEW,         0));
+    cleanTask.insert(pair<TaskStatus, int>(TaskStatus::IN_PROGRESS, 0));
+    cleanTask.insert(pair<TaskStatus, int>(TaskStatus::TESTING,     0));
+    cleanTask.insert(pair<TaskStatus, int>(TaskStatus::DONE,        0));
+
+    personVocabulary.insert(pair<const string&, TaskInfo>(person, cleanTask)); //cleanTask copy or no?
   }
 
   tuple<TaskInfo, TaskInfo> PerformPersonTasks(const string& person, int task_count){
 
+    TaskInfo presentTaskInfo = GetPersonTasksInfo(person);
+
   }
 
 private:
-  map<string, taskCounter> personVocabulary;
- // map<string, taskCounter>::iterator it;
-
-  struct TTvoc{
-    string Person;
-    TaskInfo Tsk;
-  };
+  personObject personVocabulary;
 };
 
 
@@ -54,5 +54,7 @@ private:
 
 int main()
 {
+
+
   return 0;
 }
