@@ -1,60 +1,43 @@
 #include <iostream>
-#include <vector>
-#include <map>
-#include <tuple>
+#include <boost/asio.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/array.hpp>
+#include <string>
 
-using namespace std;
+std::string send_receive(std::string host, int port, std::string myName){
+  boost::system::error_code err;
+  boost::asio::io_service service;
+  boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string(host), port);
+  boost::asio::ip::tcp::socket sock(service);
+  sock.connect(ep);
 
-enum class TaskStatus
-{
-  NEW,
-  IN_PROGRESS,
-  TESTING,
-  DONE
-};
+  boost::array<char, 1024> buf;
+  std::copy(myName.begin(), myName.end(), buf.begin());
+  sock.write_some(boost::asio::buffer(buf), err);
 
-using TaskInfo     = map<TaskStatus, int>;
-using personObject = map<string, TaskInfo>;
+  //waits 2 seconds
+  boost::asio::deadline_timer t(service, boost::posix_time::seconds(5));
 
-class TeamTasks {
-public:
-  const TaskInfo& GetPersonTasksInfo(const string& person) const{
-    auto search = personVocabulary.find(person);
-    if(search != personVocabulary.end()){
-        return search->second;
+  boost::array<char, 1024> rbuf;
+  sock.read_some(boost::asio::buffer(rbuf), err);
+  if (err == boost::asio::error::eof){
+      return  "Connection closed by server\n";
+      sock.close();
       }
-    else { //may i do this?
-        TaskInfo *t = NULL;
-        return *t;
+      else if (err) {
+
+        sock.close();
+        return "error in connection";
       }
-  }
 
-  void AddNewTask(const string& person){
-    TaskInfo cleanTask;
-    cleanTask.insert(pair<TaskStatus, int>(TaskStatus::NEW,         0));
-    cleanTask.insert(pair<TaskStatus, int>(TaskStatus::IN_PROGRESS, 0));
-    cleanTask.insert(pair<TaskStatus, int>(TaskStatus::TESTING,     0));
-    cleanTask.insert(pair<TaskStatus, int>(TaskStatus::DONE,        0));
-
-    personVocabulary.insert(pair<const string&, TaskInfo>(person, cleanTask)); //cleanTask copy or no?
-  }
-
-  tuple<TaskInfo, TaskInfo> PerformPersonTasks(const string& person, int task_count){
-
-    TaskInfo presentTaskInfo = GetPersonTasksInfo(person);
-
-  }
-
-private:
-  personObject personVocabulary;
-};
-
-
+  sock.close();
+  return rbuf.data();
+}
 
 
 int main()
 {
-
-
+  std::string str = send_receive("127.0.0.1", 33333, "con1");
+  std::cout << str << std::endl;
   return 0;
 }
